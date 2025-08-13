@@ -11,6 +11,7 @@ import os
 import time
 import re
 import sys
+import subprocess
 from typing import Union
 
 import bottle  # type: ignore
@@ -108,8 +109,11 @@ def load_config(path):
         config.set(s, "name", s)
 
         desc = config.get(s, "desc")
-        if not desc and os.path.exists(fullpath + "/description"):
-            desc = open(fullpath + "/description").read().strip()
+        if not desc:
+            readme = get_readme_from_bare_repo(fullpath)
+            if len(readme) > 0:
+                desc = first_sentence_from_md(readme)
+           
 
         r = git.Repo(fullpath, name=s)
         r.info.desc = desc
@@ -184,6 +188,47 @@ def repo_filter(unused_conf):
 
     return regexp, to_python, to_url
 
+def first_sentence_from_md(md_text: str) -> str:
+    """
+    Extract the first sentence that appears after the first Markdown heading.
+    """
+
+    # Matches first sentence after one-or-more headings (handles blank lines and multi-line sentences)
+    pattern = re.compile(
+    r'^(?:\s*#{1,6}\s*[^\n]*\n+)+\s*'   # one or more heading lines, possibly separated by blank lines
+    r'([^\n#][\s\S]*?[.!?])'            # first non-heading content up to first . ! or ?
+    r'(?=\s|$)',                        # stop before whitespace or end
+    flags=re.MULTILINE
+)
+    # Match first heading and capture everything after it
+    match = re.search(pattern, md_text)
+    if not match:
+        return ''
+
+    after_heading = match.group(1).strip()
+
+    # Remove Markdown image syntax: ![alt](src) and [![alt](src)](link)
+    after_heading = re.sub(r'\[!\[[^\]]*\]\([^)]+\)\]\([^)]+\)', '', after_heading)  # linked images
+    after_heading = re.sub(r'!\[[^\]]*\]\([^)]+\)', '', after_heading)           
+    after_heading = re.sub(r'\s+', ' ', after_heading)  # collapse whitespace
+    after_heading = re.sub(r'<img\b[^>]*>', '', after_heading, flags=re.IGNORECASE) # Strip HTML <img> tags
+    after_heading = re.sub(r'<!--.*?-->', '', after_heading, flags=re.DOTALL) # Strip HTML comments <!-- ... -->
+    after_heading = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', after_heading) # Strip Markdown links [text](url)
+
+    # Extract first sentence
+    sentence_match = re.match(r'([^#]+?[.!?])(\s|$)', after_heading)
+    return sentence_match.group(1) if sentence_match else ''
+
+def get_readme_from_bare_repo(repo_path) -> str:
+    """
+    Reads the contents of a file from a bare Git repository at a given commit/tag/branch.
+    """
+    result = subprocess.run(
+            ["git", "--git-dir", repo_path, "show", "HEAD:README.md"],
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout
 
 app = bottle.Bottle()
 app.router.add_filter("repo", repo_filter)
