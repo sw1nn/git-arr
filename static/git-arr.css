@@ -42,15 +42,15 @@
         --age-fg0: #51a552;
         --age-fg1: #468646;
         --age-fg2: #2f722f;
-        --diff-added-fg: #00A000;
-        --diff-deleted-fg: #A00000;
-        --diff-added-bg: #1a3d2e;
-        --diff-removed-bg: #4a1e1e;
-        --diff-added-highlight-bg: #2d5a3f;
-        --diff-removed-highlight-bg: #6e2c2c;
-        --diff-header-bg: #1c1f24;
+        --diff-added-fg: #3fb950;
+        --diff-deleted-fg: #f85149;
+        --diff-added-bg: #0d1117;
+        --diff-removed-bg: #0d1117;
+        --diff-added-highlight-bg: #238636;
+        --diff-removed-highlight-bg: #da3633;
+        --diff-header-bg: #161b22;
         --diff-header-fg: #8b949e;
-        --diff-hunk-bg: #1c2d3a;
+        --diff-hunk-bg: #161b22;
         --diff-hunk-fg: #58a6ff;
     }
 }
