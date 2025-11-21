@@ -193,12 +193,10 @@ def colorize_diff_enhanced(s: str) -> str:
 
             # Render both lines with inline highlighting
             output.append('<div class="diff-line diff-line-removed">')
-            output.append('<span class="diff-marker">-</span>')
             output.append(_render_line_parts(old_parts, 'removed'))
             output.append('</div>')
 
             output.append('<div class="diff-line diff-line-added">')
-            output.append('<span class="diff-marker">+</span>')
             output.append(_render_line_parts(new_parts, 'added'))
             output.append('</div>')
 
@@ -208,7 +206,6 @@ def colorize_diff_enhanced(s: str) -> str:
         # Regular removed line
         if line.startswith('-') and not line.startswith('---'):
             output.append('<div class="diff-line diff-line-removed">')
-            output.append('<span class="diff-marker">-</span>')
             output.append(html.escape(line[1:]))
             output.append('</div>')
             i += 1
@@ -217,7 +214,6 @@ def colorize_diff_enhanced(s: str) -> str:
         # Regular added line
         if line.startswith('+') and not line.startswith('+++'):
             output.append('<div class="diff-line diff-line-added">')
-            output.append('<span class="diff-marker">+</span>')
             output.append(html.escape(line[1:]))
             output.append('</div>')
             i += 1
@@ -226,7 +222,6 @@ def colorize_diff_enhanced(s: str) -> str:
         # Context line (unchanged)
         if line.startswith(' '):
             output.append('<div class="diff-line diff-line-context">')
-            output.append('<span class="diff-marker"> </span>')
             output.append(html.escape(line[1:]))
             output.append('</div>')
             i += 1
@@ -238,7 +233,7 @@ def colorize_diff_enhanced(s: str) -> str:
         i += 1
 
     output.append('</div>')
-    return '\n'.join(output)
+    return ''.join(output)
 
 
 @functools.lru_cache

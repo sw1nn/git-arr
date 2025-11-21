@@ -291,16 +291,9 @@ div.enhanced-diff .diff-hunk-context {
 }
 
 div.enhanced-diff .diff-line {
-    padding: 0.1em 0.5em;
+    padding: 0.1em 1em;
     white-space: pre-wrap;
     word-break: break-all;
-}
-
-div.enhanced-diff .diff-marker {
-    display: inline-block;
-    width: 1.5em;
-    text-align: center;
-    user-select: none;
 }
 
 div.enhanced-diff .diff-line-removed {
