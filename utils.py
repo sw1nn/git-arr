@@ -27,8 +27,11 @@ except ImportError:
     markdown = None
 
 import base64
+import difflib
 import functools
+import html
 import mimetypes
+import re
 import string
 import inspect
 import sys
@@ -97,6 +100,145 @@ def colorize_diff(s: str) -> str:
     formatter = HtmlFormatter(encoding="utf-8", cssclass="source_code")
 
     return highlight(s, lexer, formatter)
+
+
+def _compute_line_diff(old_line: str, new_line: str):
+    """
+    Compute character-level diff between two lines.
+    Returns (old_parts, new_parts) where each is a list of (text, is_changed).
+    """
+    matcher = difflib.SequenceMatcher(None, old_line, new_line)
+    old_parts = []
+    new_parts = []
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == 'equal':
+            old_parts.append((old_line[i1:i2], False))
+            new_parts.append((new_line[j1:j2], False))
+        elif tag == 'replace':
+            old_parts.append((old_line[i1:i2], True))
+            new_parts.append((new_line[j1:j2], True))
+        elif tag == 'delete':
+            old_parts.append((old_line[i1:i2], True))
+        elif tag == 'insert':
+            new_parts.append((new_line[j1:j2], True))
+
+    return old_parts, new_parts
+
+
+def _render_line_parts(parts, line_type):
+    """
+    Render line parts with appropriate highlighting.
+    line_type: 'removed' or 'added'
+    """
+    result = []
+    for text, is_changed in parts:
+        if not text:
+            continue
+        escaped = html.escape(text)
+        if is_changed:
+            result.append(f'<span class="diff-{line_type}-highlight">{escaped}</span>')
+        else:
+            result.append(escaped)
+    return ''.join(result)
+
+
+@functools.lru_cache
+def colorize_diff_enhanced(s: str) -> str:
+    """
+    Enhanced diff rendering with character-level change highlighting.
+    Similar to delta's output style.
+    """
+    lines = s.split('\n')
+    output = []
+    output.append('<div class="enhanced-diff">')
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        # Diff header lines (diff --git, index, +++, ---)
+        if line.startswith('diff --git') or line.startswith('index ') or \
+           line.startswith('---') or line.startswith('+++'):
+            output.append(f'<div class="diff-header">{html.escape(line)}</div>')
+            i += 1
+            continue
+
+        # Hunk headers (@@ ... @@)
+        if line.startswith('@@'):
+            # Extract hunk header and any trailing context
+            match = re.match(r'^(@@[^@]*@@)(.*)', line)
+            if match:
+                hunk_info, context = match.groups()
+                output.append(f'<div class="diff-hunk-header">')
+                output.append(f'<span class="diff-hunk-info">{html.escape(hunk_info)}</span>')
+                if context:
+                    output.append(f'<span class="diff-hunk-context">{html.escape(context)}</span>')
+                output.append('</div>')
+            else:
+                output.append(f'<div class="diff-hunk-header">{html.escape(line)}</div>')
+            i += 1
+            continue
+
+        # Check for modified line pairs (- followed by +)
+        if line.startswith('-') and not line.startswith('---') and \
+           i + 1 < len(lines) and lines[i + 1].startswith('+') and \
+           not lines[i + 1].startswith('+++'):
+
+            old_line = line[1:]  # Remove leading '-'
+            new_line = lines[i + 1][1:]  # Remove leading '+'
+
+            # Compute character-level diff
+            old_parts, new_parts = _compute_line_diff(old_line, new_line)
+
+            # Render both lines with inline highlighting
+            output.append('<div class="diff-line diff-line-removed">')
+            output.append('<span class="diff-marker">-</span>')
+            output.append(_render_line_parts(old_parts, 'removed'))
+            output.append('</div>')
+
+            output.append('<div class="diff-line diff-line-added">')
+            output.append('<span class="diff-marker">+</span>')
+            output.append(_render_line_parts(new_parts, 'added'))
+            output.append('</div>')
+
+            i += 2
+            continue
+
+        # Regular removed line
+        if line.startswith('-') and not line.startswith('---'):
+            output.append('<div class="diff-line diff-line-removed">')
+            output.append('<span class="diff-marker">-</span>')
+            output.append(html.escape(line[1:]))
+            output.append('</div>')
+            i += 1
+            continue
+
+        # Regular added line
+        if line.startswith('+') and not line.startswith('+++'):
+            output.append('<div class="diff-line diff-line-added">')
+            output.append('<span class="diff-marker">+</span>')
+            output.append(html.escape(line[1:]))
+            output.append('</div>')
+            i += 1
+            continue
+
+        # Context line (unchanged)
+        if line.startswith(' '):
+            output.append('<div class="diff-line diff-line-context">')
+            output.append('<span class="diff-marker"> </span>')
+            output.append(html.escape(line[1:]))
+            output.append('</div>')
+            i += 1
+            continue
+
+        # Other lines (shouldn't normally happen in well-formed diffs)
+        if line:
+            output.append(f'<div class="diff-line">{html.escape(line)}</div>')
+        i += 1
+
+    output.append('</div>')
+    return '\n'.join(output)
 
 
 @functools.lru_cache

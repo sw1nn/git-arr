@@ -55,15 +55,7 @@
 
 <hr/>
 
-% if can_colorize(c.diff.body):
-<div class="colorized-src">
-{{!colorize_diff(c.diff.body)}}
-</div>
-% else:
-<pre class="diff-body">
-{{c.diff.body}}
-</pre>
-% end
+{{!colorize_diff_enhanced(c.diff.body)}}
 
 <hr/>
 

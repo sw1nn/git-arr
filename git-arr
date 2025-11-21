@@ -288,6 +288,7 @@ def with_utils(f):
         "shorten": utils.shorten,
         "can_colorize": utils.can_colorize,
         "colorize_diff": utils.colorize_diff,
+        "colorize_diff_enhanced": utils.colorize_diff_enhanced,
         "colorize_blob": utils.colorize_blob,
         "can_markdown": utils.can_markdown,
         "markdown_blob": utils.markdown_blob,

@@ -17,6 +17,14 @@
     --age-fg2: seagreen;
     --diff-added-fg: green;
     --diff-deleted-fg: red;
+    --diff-added-bg: #e6ffec;
+    --diff-removed-bg: #ffebe9;
+    --diff-added-highlight-bg: #abf2bc;
+    --diff-removed-highlight-bg: #ffd7d5;
+    --diff-header-bg: #f6f8fa;
+    --diff-header-fg: #57606a;
+    --diff-hunk-bg: #ddf4ff;
+    --diff-hunk-fg: #0969da;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -36,6 +44,14 @@
         --age-fg2: #2f722f;
         --diff-added-fg: #00A000;
         --diff-deleted-fg: #A00000;
+        --diff-added-bg: #1a3d2e;
+        --diff-removed-bg: #4a1e1e;
+        --diff-added-highlight-bg: #2d5a3f;
+        --diff-removed-highlight-bg: #6e2c2c;
+        --diff-header-bg: #1c1f24;
+        --diff-header-fg: #8b949e;
+        --diff-hunk-bg: #1c2d3a;
+        --diff-hunk-fg: #58a6ff;
     }
 }
 
@@ -239,6 +255,74 @@ table.changed-files span.lines-added {
 
 table.changed-files span.lines-deleted {
     color: var(--diff-deleted-fg);
+}
+
+/* Enhanced diff display (delta-style) */
+div.enhanced-diff {
+    font-family: monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+    overflow: auto;
+}
+
+div.enhanced-diff .diff-header {
+    background: var(--diff-header-bg);
+    color: var(--diff-header-fg);
+    padding: 0.2em 0.5em;
+    font-weight: bold;
+}
+
+div.enhanced-diff .diff-hunk-header {
+    background: var(--diff-hunk-bg);
+    color: var(--diff-hunk-fg);
+    padding: 0.3em 0.5em;
+    margin: 0.5em 0;
+    font-weight: bold;
+}
+
+div.enhanced-diff .diff-hunk-info {
+    color: var(--diff-hunk-fg);
+}
+
+div.enhanced-diff .diff-hunk-context {
+    margin-left: 1em;
+    font-weight: normal;
+    opacity: 0.8;
+}
+
+div.enhanced-diff .diff-line {
+    padding: 0.1em 0.5em;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+div.enhanced-diff .diff-marker {
+    display: inline-block;
+    width: 1.5em;
+    text-align: center;
+    user-select: none;
+}
+
+div.enhanced-diff .diff-line-removed {
+    background: var(--diff-removed-bg);
+}
+
+div.enhanced-diff .diff-line-added {
+    background: var(--diff-added-bg);
+}
+
+div.enhanced-diff .diff-line-context {
+    background: var(--body-bg);
+}
+
+div.enhanced-diff .diff-removed-highlight {
+    background: var(--diff-removed-highlight-bg);
+    font-weight: bold;
+}
+
+div.enhanced-diff .diff-added-highlight {
+    background: var(--diff-added-highlight-bg);
+    font-weight: bold;
 }
 
 
