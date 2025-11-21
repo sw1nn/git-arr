@@ -167,6 +167,21 @@ table.projects td.desc {
     white-space: nowrap;
 }
 
+/* Sortable table headers */
+table.projects th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+table.projects th.sortable:hover {
+    background: var(--table-hover-bg);
+}
+
+table.projects .sort-indicator {
+    font-size: smaller;
+    color: var(--a-fg);
+}
+
 
 /* Age of an object.
  * Note this is hidden by default as we rely on javascript to show it. */

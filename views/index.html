@@ -11,20 +11,28 @@
 <body class="index" onload="replace_timestamps()">
 <h1>git</h1>
 
-<table class="nice projects">
+<table class="nice projects" id="repos-table">
+    <thead>
     <tr>
-        <th>project</th>
+        <th class="sortable" onclick="sortTable(0, 'string')" id="th-name">
+            project <span class="sort-indicator"></span>
+        </th>
         <th>description</th>
+        <th class="sortable" onclick="sortTable(2, 'number')" id="th-date">
+            last commit <span class="sort-indicator"></span>
+        </th>
     </tr>
-
+    </thead>
+    <tbody>
     % for repo in sorted(repos.values(), key = lambda r: r.name):
     <tr>
         <td class="name"><a href="r/{{repo.name}}/">{{repo.name}}</a></td>
         <td class="desc"><a href="r/{{repo.name}}/" title="{{repo.info.desc}}">
             {{repo.info.desc}}</a></td>
-        <td><span class="age">{{repo.last_commit_timestamp()}}</span></td>
+        <td><span class="age" data-timestamp="{{repo.last_commit_timestamp()}}">{{repo.last_commit_timestamp()}}</span></td>
     </tr>
     %end
+    </tbody>
 </table>
 
 </body>

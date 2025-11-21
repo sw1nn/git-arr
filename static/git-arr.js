@@ -71,3 +71,70 @@ function toggle(id) {
         e.style.display = ""
     }
 }
+
+/* Table sorting functionality */
+var currentSortColumn = -1;
+var currentSortDirection = 'asc';
+
+function sortTable(columnIndex, dataType) {
+    var table = document.getElementById('repos-table');
+    var tbody = table.querySelector('tbody');
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+
+    // Determine sort direction
+    if (currentSortColumn === columnIndex) {
+        // Toggle direction if clicking the same column
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        // New column, default to ascending
+        currentSortDirection = 'asc';
+        currentSortColumn = columnIndex;
+    }
+
+    // Sort the rows
+    rows.sort(function(a, b) {
+        var cellA = a.cells[columnIndex];
+        var cellB = b.cells[columnIndex];
+        var valueA, valueB;
+
+        if (dataType === 'number') {
+            // For timestamp columns, use the data-timestamp attribute
+            var spanA = cellA.querySelector('.age');
+            var spanB = cellB.querySelector('.age');
+            valueA = parseFloat(spanA.getAttribute('data-timestamp'));
+            valueB = parseFloat(spanB.getAttribute('data-timestamp'));
+        } else {
+            // For string columns, use text content
+            valueA = cellA.textContent.trim().toLowerCase();
+            valueB = cellB.textContent.trim().toLowerCase();
+        }
+
+        var comparison = 0;
+        if (valueA > valueB) {
+            comparison = 1;
+        } else if (valueA < valueB) {
+            comparison = -1;
+        }
+
+        return currentSortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    // Reorder the rows in the table
+    rows.forEach(function(row) {
+        tbody.appendChild(row);
+    });
+
+    // Update sort indicators
+    updateSortIndicators(columnIndex);
+}
+
+function updateSortIndicators(activeColumn) {
+    var indicators = document.querySelectorAll('.sort-indicator');
+    indicators.forEach(function(indicator, index) {
+        if (index === activeColumn) {
+            indicator.textContent = currentSortDirection === 'asc' ? ' ▲' : ' ▼';
+        } else {
+            indicator.textContent = '';
+        }
+    });
+}
