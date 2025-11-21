@@ -191,33 +191,76 @@ def repo_filter(unused_conf):
 def first_sentence_from_md(md_text: str) -> str:
     """
     Extract the first sentence that appears after the first Markdown heading.
+    Skips headings, badges, horizontal rules, blank lines, and other markdown frontmatter.
     """
+    # First, normalize line endings and remove any leading/trailing whitespace
+    md_text = md_text.strip()
 
-    # Matches first sentence after one-or-more headings (handles blank lines and multi-line sentences)
-    pattern = re.compile(
-    r'^(?:\s*#{1,6}\s*[^\n]*\n+)+\s*'   # one or more heading lines, possibly separated by blank lines
-    r'([^\n#][\s\S]*?[.!?])'            # first non-heading content up to first . ! or ?
-    r'(?=\s|$)',                        # stop before whitespace or end
-    flags=re.MULTILINE
-)
-    # Match first heading and capture everything after it
-    match = re.search(pattern, md_text)
-    if not match:
-        return ''
+    # Split into lines for processing
+    lines = md_text.split('\n')
+    content_started = False
+    content_lines = []
 
-    after_heading = match.group(1).strip()
+    for line in lines:
+        stripped = line.strip()
 
-    # Remove Markdown image syntax: ![alt](src) and [![alt](src)](link)
-    after_heading = re.sub(r'\[!\[[^\]]*\]\([^)]+\)\]\([^)]+\)', '', after_heading)  # linked images
-    after_heading = re.sub(r'!\[[^\]]*\]\([^)]+\)', '', after_heading)           
-    after_heading = re.sub(r'\s+', ' ', after_heading)  # collapse whitespace
-    after_heading = re.sub(r'<img\b[^>]*>', '', after_heading, flags=re.IGNORECASE) # Strip HTML <img> tags
-    after_heading = re.sub(r'<!--.*?-->', '', after_heading, flags=re.DOTALL) # Strip HTML comments <!-- ... -->
-    after_heading = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', after_heading) # Strip Markdown links [text](url)
+        # Skip empty lines before content starts
+        if not content_started and not stripped:
+            continue
 
-    # Extract first sentence
-    sentence_match = re.match(r'([^#]+?[.!?])(\s|$)', after_heading)
-    return sentence_match.group(1) if sentence_match else ''
+        # Skip headings (both # style and underlined style)
+        if stripped.startswith('#'):
+            content_started = False  # Reset if we hit another heading
+            continue
+
+        # Skip horizontal rules (---, ***, ___)
+        if re.match(r'^[-*_]{3,}$', stripped):
+            continue
+
+        # Skip lines that are only badges/shields/images
+        # Matches: [![...](...)...](...) or ![...](...)
+        if re.match(r'^(\[?!\[.*?\]\(.*?\)\]?(\(.*?\))?[\s]*)+$', stripped):
+            continue
+
+        # Skip HTML comments
+        if re.match(r'^<!--.*?-->$', stripped, flags=re.DOTALL):
+            continue
+
+        # If we've made it here and have non-empty content, this is actual text
+        if stripped:
+            content_started = True
+            content_lines.append(line)
+
+    # Join the content back together
+    content = ' '.join(content_lines)
+
+    # Clean up remaining inline markdown elements
+    # Remove inline badges/images: [![alt](src)](link) and ![alt](src)
+    content = re.sub(r'\[!\[[^\]]*\]\([^)]+\)\]\([^)]+\)', '', content)
+    content = re.sub(r'!\[[^\]]*\]\([^)]+\)', '', content)
+
+    # Remove HTML img tags
+    content = re.sub(r'<img\b[^>]*>', '', content, flags=re.IGNORECASE)
+
+    # Remove HTML comments
+    content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+
+    # Convert markdown links [text](url) to just text
+    content = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', content)
+
+    # Collapse whitespace
+    content = re.sub(r'\s+', ' ', content).strip()
+
+    # Extract first sentence (up to . ! or ?)
+    sentence_match = re.match(r'^([^.!?]+[.!?])', content)
+    if sentence_match:
+        return sentence_match.group(1).strip()
+
+    # If no sentence terminator found, return first ~100 chars or whole content
+    if len(content) > 100:
+        return content[:97] + '...'
+
+    return content
 
 def get_readme_from_bare_repo(repo_path) -> str:
     """
