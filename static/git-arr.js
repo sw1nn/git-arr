@@ -60,6 +60,9 @@ function replace_timestamps() {
                 e.className = e.className + " age-band2";
         }
     }
+
+    // Set initial sort indicator for date column (most recent first)
+    updateSortIndicators(currentSortColumn);
 }
 
 function toggle(id) {
@@ -73,8 +76,8 @@ function toggle(id) {
 }
 
 /* Table sorting functionality */
-var currentSortColumn = -1;
-var currentSortDirection = 'asc';
+var currentSortColumn = 2; // Initialize to date column (index 2)
+var currentSortDirection = 'desc'; // Initialize to descending (most recent first)
 
 function sortTable(columnIndex, dataType) {
     var table = document.getElementById('repos-table');

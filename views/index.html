@@ -24,7 +24,7 @@
     </tr>
     </thead>
     <tbody>
-    % for repo in sorted(repos.values(), key = lambda r: r.name):
+    % for repo in sorted(repos.values(), key = lambda r: r.last_commit_timestamp(), reverse=True):
     <tr>
         <td class="name"><a href="r/{{repo.name}}/">{{repo.name}}</a></td>
         <td class="desc"><a href="r/{{repo.name}}/" title="{{repo.info.desc}}">
